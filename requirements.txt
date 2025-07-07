@@ -12,3 +12,7 @@ whitenoise==6.8.2
 psycopg2== 2.9.4 #db
 
 django-environ==0.9.0 #variables de ambiente
+
+pillow==11.0.0 #para procesar imagenes
+
+django-ckeditor-5==0.2.15 #editor para el content

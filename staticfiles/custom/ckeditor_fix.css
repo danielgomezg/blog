@@ -1,0 +1,10 @@
+.ck-editor__editable_inline {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+}
+
+.ck.ck-toolbar {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    border: 1px solid #ccc;
+}
