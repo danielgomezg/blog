@@ -1,8 +1,9 @@
 from rest_framework.generics import ListAPIView, RetrieveAPIView
-from .serializers import PostListSerializer, PostSerializer, HeadingSerializer
-from .models import Post, Heading
+from .serializers import PostListSerializer, PostSerializer, HeadingSerializer, PostView
+from .models import Post, Heading, PostAnalytics
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from .utils import get_client_ip
 
 #Lista por eso el listApiView
 #class PostListView(ListAPIView):
@@ -22,10 +23,25 @@ class PostListView(APIView):
    # lookup_field = 'slug'
 
 class PostDetailView(RetrieveAPIView):
+
     def get(self, request, slug):
         post = Post.postObjects.get(slug=slug)
         serialized_post = PostSerializer(post).data
+        #incrementar las vistas del post
+        post_analytics = PostAnalytics.objects.get(post=post)
+        post_analytics.increment_view(request)
+        #antigua forma de hacaerlo
+        #client_ip = get_client_ip(request)
+        #if PostView.objects.filter(post=post, ip_address=client_ip).exists():
+        #    return Response(serialized_post)
+       # PostView.objects.create(post=post, ip_address=client_ip)
         return Response(serialized_post)
+
+#class PostDetailView(RetrieveAPIView):
+ #   def get(self, request, slug):
+  #      post = Post.postObjects.get(slug=slug)
+   #     serialized_post = PostSerializer(post).data
+    #    return Response(serialized_post)
 
 class PostHeadingsView(ListAPIView):
     serializer_classes = HeadingSerializer
