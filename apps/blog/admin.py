@@ -52,8 +52,6 @@ class PostAdmin(admin.ModelAdmin):
     )
     inlines = [HeadingInline]
 
-
-
 @admin.register(Heading)
 class HeadingAdmin(admin.ModelAdmin):
     list_display = ('title', 'post', 'level', 'order')
@@ -64,11 +62,11 @@ class HeadingAdmin(admin.ModelAdmin):
 
 @admin.register(PostAnalytics)
 class PostAnalyticsAdmin(admin.ModelAdmin):
-    list_display = ('post_title', 'views', 'impressions', 'clicks', 'click_through_rate', 'avg_time_on_page')
+    list_display = ('post_title', 'views', 'impressions', 'clicks', 'click_through_rate', 'avg_time_on_page') #como post_title no pertenece al modelo hay que definirlo en una funcion
     search_fields = ('post__title',)
     readonly_fields = ('views', 'impressions', 'clicks', 'click_through_rate', 'avg_time_on_page')
 
-    def post_title(self, obj):
+    def post_title(self, obj): #obj es igual al modelo que se registra admin.register(PostAnalytics)
         return obj.post.title
     
     post_title.short_description = 'Post Title'

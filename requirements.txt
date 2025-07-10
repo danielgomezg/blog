@@ -16,3 +16,6 @@ django-environ==0.9.0 #variables de ambiente
 pillow==11.0.0 #para procesar imagenes
 
 django-ckeditor-5==0.2.15 #editor para el content
+
+celery==5.4.0
+django-celery-results==2.5.1
