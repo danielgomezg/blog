@@ -14,6 +14,8 @@ environ.Env.read_env()
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = env("SECRET_KEY")
 
+VALID_API_KEYS = env("VALID_API_KEYS").split(",")
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
@@ -40,6 +42,7 @@ THIRD_PARTY_APPS = [
     'channels',
     'django_ckeditor_5',
     'django_celery_results',
+    'django_celery_beat',
 ]
 
 INSTALLED_APPS = DJANGO_APPS + PROJECT_APPS + THIRD_PARTY_APPS
@@ -187,6 +190,7 @@ CHANNELLS_LAYERS = {
     }
 }
 
+REDIS_HOST = env("REDIS_HOST")
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
@@ -216,4 +220,8 @@ CELERY_CACHE_BACKEND = 'default'
 
 CELERY_IMPORTS = (
     'core.tasks',
+    'apps.blog.tasks'
 )
+
+CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
+CELERY_BEAT_SCHEDULE = {}

@@ -19,3 +19,4 @@ django-ckeditor-5==0.2.15 #editor para el content
 
 celery==5.4.0
 django-celery-results==2.5.1
+django-celery-beat==2.7.0
