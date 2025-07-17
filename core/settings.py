@@ -43,6 +43,7 @@ THIRD_PARTY_APPS = [
     'django_ckeditor_5',
     'django_celery_results',
     'django_celery_beat',
+    'rest_framework_api', #para respuesta standar
 ]
 
 INSTALLED_APPS = DJANGO_APPS + PROJECT_APPS + THIRD_PARTY_APPS

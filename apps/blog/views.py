@@ -2,6 +2,7 @@ from rest_framework.generics import ListAPIView, RetrieveAPIView
 from .serializers import PostListSerializer, PostSerializer, HeadingSerializer, PostView
 from .models import Post, Heading, PostAnalytics
 from rest_framework.views import APIView
+from rest_framework_api.views import StandardAPIView
 from rest_framework.response import Response
 from .utils import get_client_ip
 from rest_framework.exceptions import NotFound, APIException 
@@ -23,7 +24,8 @@ redis_client = redis.StrictRedis(host=settings.REDIS_HOST, port=6379, db=0)
 #    queryset = Post.postObjects.all()
 #    serializer_class = PosListSerializer
 #esta es otra forma de hacer la vista en la cual se definen los metedos por lo que que hay que hacer return 
-class PostListView(APIView):
+#*recordar que la respuesta se cambio de apiview a standarapiview creado por el profe de udemy
+class PostListView(StandardAPIView):
     permission_classes = [HasValidAPIKey] #Validado con al apikey de env, validador de permisos
 
     #@method_decorator(cache_page(60 * 1)) metodo de cache de 1 min, es un metodo rapido pero no tan efectivo ya que por ejemplo las impresiones no se actualizarian, ya 
@@ -38,7 +40,7 @@ class PostListView(APIView):
                 for post in cached_posts:
                     redis_client.incr(f"post:impressions:{post.id}") 
 
-                return Response(cached_posts)
+                return self.paginate(request, cached_posts) #respuesta con apiview Response(cached_posts)
             
             posts = Post.postObjects.all()
 
@@ -62,7 +64,7 @@ class PostListView(APIView):
         except Exception as e:
             raise APIException(detail=f"An unexpected error ocurreed: {str(e)}")
         
-        return Response(serialized_posts)
+        return self.paginate(request, serialized_posts) #Respuesta con paginacion; Antes => Response(serialized_posts)
 
 #es como un getid, por lo que recibe solo uno por eso el RetrieveApiView
 #class PostDetailView(RetrieveAPIView):
@@ -70,7 +72,8 @@ class PostListView(APIView):
   #  serializer_class = PostSerializer
    # lookup_field = 'slug'
 
-class PostDetailView(RetrieveAPIView):
+#Recordar que el slug en el curso viene en la peticion asi url?slug=hola-mundo, como en la clase class PostHeadingsView(StandardAPIView), yo no lo modifique aca
+class PostDetailView(StandardAPIView):
     permission_classes = [HasValidAPIKey] #Validado con al apikey de env, validador de permisos
 
     def get(self, request, slug):
@@ -82,8 +85,8 @@ class PostDetailView(RetrieveAPIView):
             #si existe responde el cache si no se jecuta toda la operacion get 
             if cached_post:
                #incremento las vistas del posts
-               increment_post_views_task.delay(cached_post.slug, ip_address)
-               return Response(cached_post)
+               increment_post_views_task.delay(cached_post['slug'], ip_address)
+               return self.response(cached_post) #Response(cached_post)
 
             post = Post.postObjects.get(slug=slug)
 
@@ -106,7 +109,7 @@ class PostDetailView(RetrieveAPIView):
         #if PostView.objects.filter(post=post, ip_address=client_ip).exists():
         #    return Response(serialized_post)
        # PostView.objects.create(post=post, ip_address=client_ip)
-        return Response(serialized_post)
+        return self.response(serialized_post) #Response(serialized_post)
 
 #class PostDetailView(RetrieveAPIView):
  #   def get(self, request, slug):
@@ -114,16 +117,17 @@ class PostDetailView(RetrieveAPIView):
    #     serialized_post = PostSerializer(post).data
     #    return Response(serialized_post)
 
-class PostHeadingsView(ListAPIView):
-    permission_classes = [HasValidAPIKey] #Validado con al apikey de env, validador de permisos
-    serializer_classes = HeadingSerializer
+class PostHeadingsView(StandardAPIView):
+    permission_classes = [HasValidAPIKey]
 
-    def get_queryset(self):
-        post_slug = self.kwargs.get("slug")
-        #post__slug el guion bajo doble sirve para acceder al atributo del modelo, a la izquierda el modelo y derecha atributo(sin no se coloca nada accede todos los atributos*)
-        return Heading.objects.filter(post__slug = post_slug)
+    def get(self,request):
+        post_slug = request.query_params.get("slug")
+        heading_objects = Heading.objects.filter(post__slug = post_slug)
+        serialized_data = HeadingSerializer(heading_objects, many=True).data
+        return self.response(serialized_data)
     
-class IncrementPostClickView(APIView):
+    
+class IncrementPostClickView(StandardAPIView):
     permission_classes = [HasValidAPIKey] #Validado con al apikey de env, validador de permisos
 
     def post(self, request):
@@ -141,8 +145,13 @@ class IncrementPostClickView(APIView):
             post_analytics.increment_click()
         except Exception as e:
             raise APIException(detail=f"An error ocurred while updating post analytics: {str(e)}")
-
-        return Response({
+        
+        return self.response({
             "message": "Click incremented successfully",
             "clicks": post_analytics.clicks
         })
+    
+        #return Response({
+        #    "message": "Click incremented successfully",
+        #    "clicks": post_analytics.clicks
+        #})

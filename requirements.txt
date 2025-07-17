@@ -20,3 +20,5 @@ django-ckeditor-5==0.2.15 #editor para el content
 celery==5.4.0
 django-celery-results==2.5.1
 django-celery-beat==2.7.0
+
+djangorestframework-api-response==0.1.0 #Para una respuesta mas estandarizada (por ejemplo con el status, etc, parecido a lo que hacia con schema generico) creada por el prof de udemy

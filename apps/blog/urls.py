@@ -8,7 +8,7 @@ from .views import (
 
 urlpatterns = [
     path('posts/', PostListView.as_view(), name='post-list'),
-    path('posts/<slug>', PostDetailView.as_view(), name='post-detail'),
-    path('post/<slug:slug>/headings/', PostHeadingsView.as_view(), name='post-headings'),
+    path('post/<slug>', PostDetailView.as_view(), name='post-detail'),
+    path('post/headings/', PostHeadingsView.as_view(), name='post-headings'), #antes 'post/<slug:slug>/headings/', ahor en views.py se obtiene el slug del request
     path('post/increments_clicks/', IncrementPostClickView.as_view(), name='increment-post-clicks')
 ]

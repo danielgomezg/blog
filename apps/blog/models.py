@@ -46,7 +46,7 @@ class Post(models.Model):
     title = models.CharField(max_length=128)
     description = models.CharField(max_length=256)
     content = CKEditor5Field('Content', config_name='default')
-    thumbnail = models.ImageField(upload_to=blog_thumbnail_directory)
+    thumbnail = models.ImageField(upload_to=blog_thumbnail_directory, blank=True, null=True)
     keywords = models.CharField(max_length=128)
     slug = models.CharField(max_length=128)
     created_at = models.DateTimeField(default=timezone.now)
