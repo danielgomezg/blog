@@ -6,15 +6,16 @@ import uuid
 from django.utils.text import slugify
 from django_ckeditor_5.fields import CKEditor5Field
 from .utils import get_client_ip
+from core.storage_backends import PublicMediaStorage
 
 #SIEMRPE QUE SE HACE UN CAMBIO HACER python manage.py makemigrations y python manage.py migrate
 #direccion donde se gureadara las imagenes del post
 def blog_thumbnail_directory(instance, filename):
-    return "blog/{0}/{1}".format(instance.title, filename)
+    return "thumbnails/blog/{0}/{1}".format(instance.title, filename)
 
 #direccion donde se gureadara las imagenes de la category
 def category_thumbnail_directory(instance, filename):
-    return "blog_categories/{0}/{1}".format(instance.name, filename)
+    return "thumbnails/blog_categories/{0}/{1}".format(instance.name, filename)
 
 class Category(models.Model):
 
@@ -46,7 +47,7 @@ class Post(models.Model):
     title = models.CharField(max_length=128)
     description = models.CharField(max_length=256)
     content = CKEditor5Field('Content', config_name='default')
-    thumbnail = models.ImageField(upload_to=blog_thumbnail_directory, blank=True, null=True)
+    thumbnail = models.ImageField(upload_to=blog_thumbnail_directory, blank=True, null=True, storage=PublicMediaStorage())
     keywords = models.CharField(max_length=128)
     slug = models.CharField(max_length=128)
     created_at = models.DateTimeField(default=timezone.now)

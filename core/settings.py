@@ -44,6 +44,7 @@ THIRD_PARTY_APPS = [
     'django_celery_results',
     'django_celery_beat',
     'rest_framework_api', #para respuesta standar
+    'storages',
 ]
 
 INSTALLED_APPS = DJANGO_APPS + PROJECT_APPS + THIRD_PARTY_APPS
@@ -163,12 +164,13 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
-STATIC_LOCATION = "static"
-STATIC_URL = '/static/'
+#Comentado cuando se definio AWS
+#STATIC_LOCATION = "static"
+#STATIC_URL = '/static/'
 STATICFILES_DIRS = [os.path.join(BASE_DIR, "staticfiles")] #
-STATIC_ROOT = os.path.join(BASE_DIR, "static")
-MEDIA_URL = 'media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+#STATIC_ROOT = os.path.join(BASE_DIR, "static")
+#MEDIA_URL = 'media/'
+#MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
@@ -226,3 +228,36 @@ CELERY_IMPORTS = (
 
 CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
 CELERY_BEAT_SCHEDULE = {}
+
+# Configuraciones de AWS
+AWS_ACCESS_KEY_ID=env("AWS_ACCESS_KEY_ID")
+AWS_SECRET_ACCESS_KEY=env("AWS_SECRET_ACCESS_KEY")
+AWS_STORAGE_BUCKET_NAME=env("AWS_STORAGE_BUCKET_NAME")
+AWS_S3_REGION_NAME=env("AWS_S3_REGION_NAME")
+AWS_S3_CUSTOM_DOMAIN=f"{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.amazonaws.com"
+
+#Configuracion de almacenamiento predeterminado
+#DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage" se cambio por el de abajo 
+
+# Configuración de seguridad y permisos
+AWS_QUERYSTRING_AUTH = False # Deshabilita las firmas en las URLs (archivos públicos)
+AWS_FILE_OVERWRITE = False # Evita sobrescribir archivos con el mismo nombre
+AWS_DEFAULT_ACL = None # Define el control de acceso predeterminado como público
+AWS_QUERYSTRING_EXPIRE = 5 # Tiempo de expiración de las URLs firmadas
+
+# Parámetros adicionales para los objetos de S3
+AWS_S3_OBJECT_PARAMETERS = {
+    "CacheControl": "max-age=86400" # Habilita el almacenamiento en caché por un día
+}
+
+# Configuración de archivos estáticos
+STATIC_LOCATION = "static"
+STATIC_URL = f"{AWS_S3_CUSTOM_DOMAIN}/{STATIC_LOCATION}/"
+STATICFILES_STORAGE = "core.storage_backends.StaticStorage"
+STATIC_ROOT = os.path.join(BASE_DIR, "static")
+
+# Configuración de archivos de medios
+MEDIA_LOCATION = "media"
+MEDIA_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/{MEDIA_LOCATION}/"
+MEDIA_ROOT = MEDIA_URL
+DEFAULT_FILE_STORAGE = "core.storage_backends.PublicMediaStorage"
