@@ -5,7 +5,7 @@ import logging
 import redis
 from django.conf import settings
 
-from .models import PostAnalytics, Post, CategoryAnalytics, Category
+from .models import PostAnalytics, Post#, CategoryAnalytics, Category
 
 logger = logging.getLogger(__name__)
 

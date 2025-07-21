@@ -1,7 +1,7 @@
 FROM python:3.9
 
 #instalar un cliente ssh
-RUN apt-get update && apt-get install -y openssh-cliente
+RUN apt-get update && apt-get install -y openssh-client
 
 # la salida se escribe en la consola de forma inmediata
 ENV PYTHONUNBUFFERED 1

@@ -58,3 +58,6 @@ services:
     depends_on:
      - django_redis
      - django_db
+
+volumes:
+  dbdata:
