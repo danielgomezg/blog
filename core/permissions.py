@@ -9,4 +9,5 @@ class HasValidAPIKey(permissions.BasePermission):
 
     def has_permission(self, request, view):
         api_key = request.headers.get("API-Key") #asi debe estar en los headres en las peticiones
+        print(api_key)
         return api_key in getattr(settings, "VALID_API_KEYS", [])

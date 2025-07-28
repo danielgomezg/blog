@@ -17,9 +17,19 @@ SECRET_KEY = env("SECRET_KEY")
 VALID_API_KEYS = env("VALID_API_KEYS").split(",")
 
 # SECURITY WARNING: don't run with debug turned on in production!
+#Django solo acepta ALLOWED_HOSTS=["*"] si DEBUG = True.
 DEBUG = True
 
 ALLOWED_HOSTS = env.list("ALLOWED_HOSTS")
+
+#Django valida el origen de las peticiones POST (como el login del admin) para evitar ataques tipo CSRF.
+CSRF_TRUSTED_ORIGINS = [
+    "https://urban-train-4w957jg7rrg2747w-8000.app.github.dev",
+    "http://localhost:8000",
+    "https://localhost:8000",
+    "http://127.0.0.1:8000",
+    
+]
 
 
 # Application definition
@@ -121,7 +131,7 @@ ASGI_APPLICATION = 'core.asgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
-print("DB HOST:--------------------------- ", env("DATABASE_HOST"))
+#print("DB HOST:--------------------------- ", env("DATABASE_HOST"))
 
 DATABASES = {
     'default': {
@@ -231,12 +241,19 @@ CELERY_IMPORTS = (
 CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
 CELERY_BEAT_SCHEDULE = {}
 
+# Configuracion de Cloudfront
+AWS_CLOUDFRONT_DOMAIN=env("AWS_CLOUDFRONT_DOMAIN")
+AWS_CLOUDFRONT_KEY_ID =env.str("AWS_CLOUDFRONT_KEY_ID").strip()
+AWS_CLOUDFRONT_KEY =env.str("AWS_CLOUDFRONT_KEY", multiline=True).encode("ascii").strip()
+
 # Configuraciones de AWS
 AWS_ACCESS_KEY_ID=env("AWS_ACCESS_KEY_ID")
 AWS_SECRET_ACCESS_KEY=env("AWS_SECRET_ACCESS_KEY")
 AWS_STORAGE_BUCKET_NAME=env("AWS_STORAGE_BUCKET_NAME")
 AWS_S3_REGION_NAME=env("AWS_S3_REGION_NAME")
-AWS_S3_CUSTOM_DOMAIN=f"{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.amazonaws.com"
+AWS_S3_CUSTOM_DOMAIN=AWS_CLOUDFRONT_DOMAIN #usa cloudfront para las imagenes (recordar que se siguen guardando en s3)
+AWS_S3_DOMAIN=f"{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.amazonaws.com" #S3 lo usaremos solo para los servicios estaticos
+
 
 #Configuracion de almacenamiento predeterminado
 #DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage" se cambio por el de abajo 
