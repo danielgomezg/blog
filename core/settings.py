@@ -44,7 +44,8 @@ DJANGO_APPS = [
 ]
 
 PROJECT_APPS = [
-    'apps.blog'
+    'apps.blog',
+    'apps.media'
 ]
 
 THIRD_PARTY_APPS = [
@@ -131,7 +132,7 @@ ASGI_APPLICATION = 'core.asgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
-#print("DB HOST:--------------------------- ", env("DATABASE_HOST"))
+print("DB HOST:--------------------------- ", env("DATABASE_NAME"))
 
 DATABASES = {
     'default': {
@@ -251,10 +252,9 @@ AWS_ACCESS_KEY_ID=env("AWS_ACCESS_KEY_ID")
 AWS_SECRET_ACCESS_KEY=env("AWS_SECRET_ACCESS_KEY")
 AWS_STORAGE_BUCKET_NAME=env("AWS_STORAGE_BUCKET_NAME")
 AWS_S3_REGION_NAME=env("AWS_S3_REGION_NAME")
-AWS_S3_CUSTOM_DOMAIN=AWS_CLOUDFRONT_DOMAIN #usa cloudfront para las imagenes (recordar que se siguen guardando en s3)
-AWS_S3_DOMAIN=f"{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.amazonaws.com" #S3 lo usaremos solo para los servicios estaticos
-
-
+#AWS_S3_CUSTOM_DOMAIN=AWS_CLOUDFRONT_DOMAIN #usa cloudfront para las imagenes (recordar que se siguen guardando en s3)
+#AWS_S3_DOMAIN=f"{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.amazonaws.com" #S3 lo usaremos solo para los servicios estaticos
+AWS_S3_CUSTOM_DOMAIN=f"{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.amazonaws.com"
 #Configuracion de almacenamiento predeterminado
 #DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage" se cambio por el de abajo 
 
@@ -273,10 +273,12 @@ AWS_S3_OBJECT_PARAMETERS = {
 STATIC_LOCATION = "static"
 STATIC_URL = f"{AWS_S3_CUSTOM_DOMAIN}/{STATIC_LOCATION}/"
 STATICFILES_STORAGE = "core.storage_backends.StaticStorage"
-STATIC_ROOT = os.path.join(BASE_DIR, "static")
+#STATIC_ROOT = os.path.join(BASE_DIR, "static")
+print(f"static----- {STATIC_URL}")
 
 # Configuración de archivos de medios
 MEDIA_LOCATION = "media"
-MEDIA_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/{MEDIA_LOCATION}/"
-MEDIA_ROOT = MEDIA_URL
+MEDIA_URL = f"https://{AWS_CLOUDFRONT_DOMAIN}/{MEDIA_LOCATION}/"
+#MEDIA_ROOT = MEDIA_URL
 DEFAULT_FILE_STORAGE = "core.storage_backends.PublicMediaStorage"
+print(f"media----- {MEDIA_URL}")

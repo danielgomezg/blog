@@ -7,15 +7,20 @@ from django.utils.text import slugify
 from django_ckeditor_5.fields import CKEditor5Field
 from .utils import get_client_ip
 from core.storage_backends import PublicMediaStorage
+from apps.media.models import Media
+from apps.media.serializers import MediaSerializer
+from django.utils.html import format_html
 
 #SIEMRPE QUE SE HACE UN CAMBIO HACER python manage.py makemigrations y python manage.py migrate
 #direccion donde se gureadara las imagenes del post
 def blog_thumbnail_directory(instance, filename):
-    return "thumbnails/blog/{0}/{1}".format(instance.title, filename)
+    sanitized_title = instance.title.replace(" ", "_")
+    return "thumbnails/blog/{0}/{1}".format(sanitized_title, filename)
 
 #direccion donde se gureadara las imagenes de la category
 def category_thumbnail_directory(instance, filename):
-    return "thumbnails/blog_categories/{0}/{1}".format(instance.name, filename)
+    sanitized_name = instance.title.replace(" ", "_")
+    return "thumbnails/blog_categories/{0}/{1}".format(sanitized_name, filename)
 
 class Category(models.Model):
 
@@ -47,7 +52,15 @@ class Post(models.Model):
     title = models.CharField(max_length=128)
     description = models.CharField(max_length=256)
     content = CKEditor5Field('Content', config_name='default')
-    thumbnail = models.ImageField(upload_to=blog_thumbnail_directory, blank=True, null=True, storage=PublicMediaStorage())
+    #thumbnail = models.ImageField(upload_to=blog_thumbnail_directory, blank=True, null=True, storage=PublicMediaStorage())
+    thumbnail = models.ForeignKey(
+        Media,
+        on_delete=models.SET_NULL,
+        related_name='post_thumbnail',
+        blank=True, 
+        null=True
+
+    )
     keywords = models.CharField(max_length=128)
     slug = models.CharField(max_length=128)
     created_at = models.DateTimeField(default=timezone.now)
@@ -64,6 +77,16 @@ class Post(models.Model):
 
     def __str__(self):
         return self.title
+
+    def thumbnail_preview(self):
+        if self.thumbnail:
+            serializer = MediaSerializer(instance=self.thumbnail)
+            url = serializer.data.get('url')
+            if url:
+                return format_html('<img src="{}" style="width: 100px; height: auto;" />', url)
+        return 'No Thumbnail'
+
+    thumbnail_preview.short_description = "Thumbnail Preview"
     
 #clase para contar las visitas al post
 class PostView(models.Model):

@@ -8,6 +8,7 @@ from django.contrib import admin
 from .models import Category, Post, Heading, PostAnalytics
 from django import forms
 from django_ckeditor_5.widgets import CKEditor5Widget
+from apps.media.models import Media
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
@@ -33,10 +34,15 @@ class HeadingInline(admin.TabularInline):
     prepopulated_fields = {'slug': ('title',)}
     ordering = ('order',)
     
+class MediaInLine(admin.TabularInline):
+    model = Media
+    extra = 1
+    fields = ('order', 'name', 'size', 'type', 'key', 'media_type')
+
 @admin.register(Post)
 class PostAdmin(admin.ModelAdmin):
     form = PostAdminForm
-    list_display = ('title', 'status', 'category', 'created_at', 'updated_at')
+    list_display = ('title', 'status', 'category', 'created_at', 'updated_at', 'thumbnail_preview')
     search_fields = ('title', 'description', 'content', 'keywords', 'slug')
     prepopulated_fields = {'slug': ('title',)}
     list_filter = ('status', 'category', 'updated_at')
@@ -44,13 +50,13 @@ class PostAdmin(admin.ModelAdmin):
     readonly_fields = ('id', 'created_at', 'updated_at',)
     fieldsets = (
         ('General Information', {
-            'fields': ('title', 'description', 'content', 'thumbnail', 'keywords', 'slug', 'category')
+            'fields': ('title', 'description', 'content', 'keywords', 'slug', 'category')
         }), 
         ('Status & Dates', {
             'fields': ('status', 'created_at', 'updated_at')
         }),
     )
-    inlines = [HeadingInline]
+    inlines = [HeadingInline]#[HeadingInline, MediaInLine]
 
 @admin.register(Heading)
 class HeadingAdmin(admin.ModelAdmin):

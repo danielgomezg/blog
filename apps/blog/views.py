@@ -36,21 +36,27 @@ class PostListView(StandardAPIView):
             cached_posts = cache.get("post_list") 
             #si existe responde el cache si no se jecuta toda la operacion get 
             if cached_posts:
+                 # Serializar los datos del caché
+               # serialized_posts = PostListSerializer(cached_posts, many=True).data
                 #se incrementa las impresiones en cache
                 for post in cached_posts:
-                    redis_client.incr(f"post:impressions:{post.id}") 
+                    redis_client.incr(f"post:impressions:post['id']") #redis_client.incr(f"post:impressions:{post.id}") 
 
                 return self.paginate(request, cached_posts) #respuesta con apiview Response(cached_posts)
             
             posts = Post.postObjects.all()
 
-            if not posts.exists():
-                raise NotFound(detail="No posts found")
-            
-            serialized_posts = PostListSerializer(posts, many=True).data
+            print(f"ssssss---  {posts}")
 
+            if not posts.exists():
+                print(f"wwqwqqw---  {posts}")
+                raise NotFound(detail="No posts found")
+
+            serialized_posts = PostListSerializer(posts, many=True).data
             #se guarda el serialized_post en cache por 5 min
             cache.set("post_list", serialized_posts, timeout=60*5)
+
+            #serialized_posts = PostListSerializer(posts, many=True).data
 
             #esto funciona, pero no es lo ideal ya que si se tiene muchos posts los recorreria todos (para mejorar esto aplica celery beat), esta es forma antigua
             #for post in posts:
