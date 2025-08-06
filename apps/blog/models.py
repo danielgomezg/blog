@@ -30,11 +30,27 @@ class Category(models.Model):
     name = models.CharField(max_length=255)
     title = models.CharField(max_length=255, blank=True, null=True)
     description = models.TextField(blank=True, null=True)
-    thumbnail = models.ImageField(upload_to=category_thumbnail_directory, blank=True, null=True)
+    #thumbnail = models.ImageField(upload_to=category_thumbnail_directory, blank=True, null=True)
+    thumbnail = models.ForeignKey(
+        Media,
+        on_delete=models.SET_NULL,
+        related_name='blog_category_thumbnail',
+        blank=True, 
+        null=True
+
+    )
     slug = models.CharField(max_length=128)
 
     def __str__(self):
         return self.name
+    
+    def thumbnail_preview(self):
+        if self.thumbnail:
+            serializer = MediaSerializer(instance=self.thumbnail)
+            url = serializer.data.get('url')
+            if url:
+                return format_html('<img src="{}" style="width: 100px; height: auto;" />', url)
+        return 'No Thumbnail'
 
 class Post(models.Model):
 

@@ -12,7 +12,7 @@ from apps.media.models import Media
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
-    list_display = ('name', 'title', 'parent', 'slug')
+    list_display = ('name', 'title', 'parent', 'slug', 'thumbnail_preview')
     search_fields = ('name', 'title', 'description', 'slug')
     prepopulated_fields = {'slug': ('name',)}
     list_filter = ('parent',)
