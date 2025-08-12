@@ -5,13 +5,15 @@ import logging
 import redis
 from django.conf import settings
 
-from .models import PostAnalytics, Post#, CategoryAnalytics, Category
+from .models import PostAnalytics, Post, CategoryAnalytics, Category
 
 logger = logging.getLogger(__name__)
 
 redis_client = redis.StrictRedis(host=settings.REDIS_HOST, port=6379, db=0)
 
 #redis_client = redis.StrictRedis(host=settings.REDIS_HOST, port=6379, db=0)
+
+# -------------- RECORDAR AGREGAR LAS TASK EN EL ADMIN DE DJANGO ----------------------
 
 @shared_task #siempre se debe colocar para definir una tarea en celery
 def increment_post_impressions(post_id):
@@ -42,15 +44,28 @@ def sync_impressions_to_db():
     Sincronizar las impresiones almacenadas en redis con la base de datos
     """
     keys = redis_client.keys("post:impressions:*") #Obtener todas las claves de impresiones
+    i = 1
     for key in keys:
+        logger.info(f"i ---- {i}")
+        i= i + 1
         try:
             post_id = key.decode("utf-8").split(":")[-1] #Extraer el ID del post desde la clave
 
+             # --- Limpieza de claves malformadas ---
+            bad_keys = redis_client.keys("post:impressions:post['id']")
+            if bad_keys:
+                for bkey in bad_keys:
+                    logger.info(f"MAL KEY --- {bkey}")
+                    redis_client.delete(bkey)
+                    logger.warning(f"Clave malformada eliminada: {bkey.decode('utf-8')}")
+            
+            
             # Validar que el post existe
             try:
                 post = Post.objects.get(id=post_id)
             except Post.DoesNotExist:
                 logger.info(f"Post with ID {post_id} does not exist. Skipping.")
+                redis_client.delete(key)
                 continue
 
             # Obtener impresiones de redis
@@ -67,6 +82,47 @@ def sync_impressions_to_db():
             analytics.save()
 
             # Incrementar la tasa de clics (CTR)
+            analytics._update_click_through_rate()
+
+            # Eliminar la clave de redis despues de sincronizar
+            redis_client.delete(key)
+        except Exception as e:
+            print(f"Error syncing impressions for {key}: {str(e)}")
+
+
+
+@shared_task
+def sync_category_impressions_to_db():
+    """
+    Sincronizar las impresiones almacenadas en redis con la base de datos
+    """
+    keys = redis_client.keys("category:impressions:*")
+    for key in keys:
+        try:
+            # Decodificar y extraer el ID de la categoría desde la clave Redis
+            category_id = key.decode("utf-8").split(":")[-1]
+
+            # Validar que la categoria existe
+            try:
+                category = Category.objects.get(id=category_id)
+            except Category.DoesNotExist:
+                logger.info(f"Category with ID {category_id} does not exist. Skipping.")
+                continue
+            
+            # Obtener impresiones de redis
+            impressions = int(redis_client.get(key))
+            if impressions == 0:
+                redis_client.delete(key)
+                continue
+
+            # Obtener y crear instancia de category analytics
+            analytics, created = CategoryAnalytics.objects.get_or_create(category=category)
+
+            # Incrementar impresiones
+            analytics.impressions += impressions
+            analytics.save()
+
+            # Actualizar tasa de clics (CTR)
             analytics._update_click_through_rate()
 
             # Eliminar la clave de redis despues de sincronizar

@@ -5,7 +5,7 @@ from django.contrib import admin
 #email admin@blog.cl
 #pass dany1234
 
-from .models import Category, Post, Heading, PostAnalytics
+from .models import Category, Post, Heading, PostAnalytics, CategoryAnalytics
 from django import forms
 from django_ckeditor_5.widgets import CKEditor5Widget
 from apps.media.models import Media
@@ -19,6 +19,17 @@ class CategoryAdmin(admin.ModelAdmin):
     ordering = ('name',)
     readonly_fields = ('id',)
     list_editable = ('title',) #hace  que se pueda editar desde la tabla en admin
+
+@admin.register(CategoryAnalytics)
+class CategoryAnalyticsAdmin(admin.ModelAdmin):
+    list_display = ('category_name', 'views', 'impressions', 'clicks', 'click_through_rate', 'avg_time_on_page')
+    search_fields = ('category__name',)
+    readonly_fields = ('category','views','impressions','clicks','click_through_rate','avg_time_on_page')
+
+    def category_name(self, obj):
+        return obj.category.name
+    
+    category_name.short_description = 'Category Name'
 
 class PostAdminForm(forms.ModelForm):
     content = forms.CharField(widget=CKEditor5Widget(config_name='default'))

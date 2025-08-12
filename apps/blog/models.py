@@ -51,6 +51,48 @@ class Category(models.Model):
             if url:
                 return format_html('<img src="{}" style="width: 100px; height: auto;" />', url)
         return 'No Thumbnail'
+    
+class CategoryView(models.Model):
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='category_view')
+    ip_address = models.GenericIPAddressField()
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+class CategoryAnalytics(models.Model):
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    category = models.OneToOneField(Category, on_delete=models.CASCADE, related_name='category_analytics')
+    
+    views = models.PositiveIntegerField(default=0)
+    impressions = models.PositiveIntegerField(default=0)
+    clicks = models.PositiveIntegerField(default=0)
+    click_through_rate = models.FloatField(default=0)
+    avg_time_on_page = models.FloatField(default=0)
+
+    def _update_click_through_rate(self):
+        if self.impressions > 0:
+            self.click_through_rate = (self.clicks/self.impressions) * 100
+        else:
+            self.click_through_rate = 0
+        self.save()
+
+    def increment_click(self):
+        self.clicks += 1
+        self.save()
+        self._update_click_through_rate()
+    
+    def increment_impression(self):
+        self.impressions += 1
+        self.save()
+        self._update_click_through_rate()
+
+    def increment_view(self, ip_address):
+        if not CategoryView.objects.filter(category=self.category, ip_address=ip_address).exists():
+            CategoryView.objects.create(category=self.category, ip_address=ip_address)
+            
+            self.views += 1
+            self.save()
 
 class Post(models.Model):
 
@@ -114,7 +156,7 @@ class PostView(models.Model):
 #analitica para recomendar post con ia
 class PostAnalytics(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='post_analytics')
+    post = models.OneToOneField(Post, on_delete=models.CASCADE, related_name='post_analytics')
     views = models.PositiveIntegerField(default=0) #visitas que tiene un post
     impressions = models.PositiveIntegerField(default=0) #cuenta cuando un post se ve por ejemplo en una miniatura, sin entrar al post
     clicks = models.PositiveIntegerField(default=0) #cuenta cuando se hace click en la miniatura (por ejemplo no cuenta cuando se ingresa directamente desde el url)
@@ -177,3 +219,8 @@ class Heading(models.Model):
 def create_post_analytics(sender, instance, created, **kwargs):
     if created:
         PostAnalytics.objects.create(post=instance)
+
+@receiver(post_save, sender=Category)
+def create_category_analytics(sender, instance, created, **kwargs):
+    if created:
+        CategoryAnalytics.objects.create(category=instance)
